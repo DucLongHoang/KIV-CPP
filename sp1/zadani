@@ -1,0 +1,138 @@
+ Zadání č. 1 - kreslení na základě textového popisu
+
+Vaším úkolem bude naprogramovat aplikaci, která je schopna načíst posloupnost příkazů ze souboru, validovat je a vykreslit na základě jejich obsahu obrázek.
+Zadání
+
+Aplikace bude z příkazové řádky přejímat 3 parametry:
+drawing.exe <input_file> <output_file> <size>
+
+Zde <input_file> označuje vstupní soubor se sekvencí příkazů (popsáno níže), <output_file> výstupní soubor a size specifikátor velikostu plátna, resp. rastru.
+
+Program detekuje z názvu výstupního souboru (resp. jeho přípony) požadovaný výstupní formát. Validními rozpoznávanými příponami jsou:
+
+    pgm - formát PGM (specifikaci formátu PGM lze naleznout zde: http://netpbm.sourceforge.net/doc/pgm.html)
+    svg - základní formát (specifikaci formátu SVG lze naleznout zde: https://www.w3.org/TR/SVG2/)
+
+Specifikátor velikosti plátna je vždy zadán jako dvojice přirozených čísel (bez nuly) oddělených znakem 'x', ve které je prvním číslem šířka a ve druhém výška plátna (resp. rastru).
+
+Program tedy může být spouštěn třeba takto:
+
+./drawing.exe house.txt house.pgm 150x100
+
+Pokud dojde k jakékoliv chybě, program vypíše srozumitelný popis chyby a ukončí se s nenulovým návratovým kódem. Mezi tyto chyby může například patřit nevalidní parametr příkazové řádky, neexistující vstupní soubor, špatný formát dat v tomto souboru, nedostatek paměti a jiné.
+
+Pokud však k chybě nedojde, program pouze vypíše na konzoli řetězec OK a na další řádce počet příkazů, které úspěšně zpracoval (nemusí souhlasit s počtem řádek, viz níže).
+
+Výstupem tak může například být následující text:
+OK
+16
+Formát vstupních dat
+
+Vstupní soubor je textový a na každém řádku obsahuje nejvýše jeden příkaz. Může dále obsahovat jednořádkové komentáře, jejichž začátek je označen znakem '#'. Tento komentář může začínat kdekoliv ve vstupní sekvenci a všechny znaky za znakem úvodním (včetně) jsou při zpracování ignorovány.
+
+Každý příkaz vždy obsahuje nejprve instrukci (např. line) a dále může obsahovat parametry oddělené mezerou, dle zvolené instrukce. Veškeré přebytečné bílé znaky jsou ignorovány - na začátku a na konci řádky, mezi parametry a tak podobně.
+
+Příkaz může označovat vytvoření nějaké entity (např. kreslení čáry, kružnice, ...) a nebo operaci s plátnem (rotace, translace, ...). Je tedy nanejvýš vhodné zamyslet se nad vhodnou reprezentací entit a plátna, aby mohl výstup být převeden s co možná nejmenší ztrátou jak do vektorového, tak rastrového formátu.
+
+Instrukce operace s plátnem provede požadovanou operaci s plátnem včetně jeho dosavadního obsahu!
+
+Instrukce pro vytváření entit:
+
+    line <x1> <y1> <x2> <y2> - nakreslí úsečku z bodu [x_1,y_1] do bodu [x_2,y_2]
+        x1, y1, x2 a y2 jsou reálná čísla
+        platí, že krajní body nesmí splývat, a tedy x1 != x2 || y1 != y2
+        např. line 10 15 120 200 (úsečka z bodu [10,15] do bodu [120,200])
+    circle <x> <y> <r> - nakreslí kružnici se středem v [x,y] a poloměrem $r$
+        x a y jsou reálná čísla
+        poloměr je kladný a nenulový, tedy r > 0
+        např. circle 30 30 8 (kružnice v bodě [30,30] s poloměrem 8)
+    rect <x> <y> <w> <h> - nakreslí obdélník s levým horním rohem v bodu [x,y], šířkou w a výškou h
+        x a y jsou reálná čísla
+        w a h jsou kladná nenulová čísla, a tedy w > 0 && h > 0
+        např. rect 50 50 100 80 (obdélník s levým horním rohem v bodu [50,50], šířkou 100 a výškou 80)
+
+Instrukce pro operace s plátnem:
+
+    translate <x> <y> - posune celé plátno (a jeho obsah) o zadané posunutí v osách x a y
+        x a y jsou reálná čísla
+        např. translate -20 30 (posun o 20 doleva a 30 dolů)
+    rotate <x> <y> <a> - otočí celé plátno (a jeho obsah) kolem středu [x,y] o úhel a.
+        x a y jsou reálná čísla
+        a je úhel zadaný ve stupních jako reálné číslo
+        např. rotate 0 0 43 (rotace kolem levého horního rohu o 43 stupňů)
+    scale <x> <y> <f> - provede škálování celého plátna (a jeho obsahu) podle středu [x,y] se zadaným faktorem f
+        x a y jsou reálná čísla
+        f je nenulové reálné číslo
+        např. scale 50 50 1.5 (škálování podle bodu [50,50] na 150 %)
+
+Tyto příkazy jsou v souboru uvedeny za sebou a jsou interpretovány v pořadí, ve kterém se v souboru nacházejí. Jakákoliv operace provedená nad plátnem ovlivňuje všechny entity, které byly doposud přidány. Na jakékoliv další nemá vliv (ty už se kreslí do "nového" souřadného systému).
+
+Příkladem takového souboru může být například:
+line 10 10 50 50
+circle 30 30 10
+rotate 0 0 85
+Výstup
+
+Jak bylo zmíněno výše, výstupním formátem bude buď formát PGM nebo SVG. V obou případech pro zadaná primitiva volte následující parametry:
+
+    úsečka - barva černá (černou barvou se skutečně rozumí #000000, či rgb(0,0,0)), tloušťka 2 pixely
+    kružnice - barva obrysu černá, tloušťka obrysu 2 pixely, bez výplně (resp. s průhlednou výplní)
+    obdélník - barva obrysu černá, tloušťka obrysu 2 pixely, bez výplně (resp. s průhlednou výplní)
+
+Pozadí obrázku bude vždy bílé (bílou barvou se skutečně rozumí #FFFFFF, či rgb(255,255,255)). V případě SVG to vynuťte příslušným parametrem elementu <svg>.
+
+Výstupní obrázek nebude obsahovat žádné prvky navíc.
+
+Výstup do formátu PGM bude vyžadovat rasterizaci. Zvolte nejjednodušší možný způsob rasterizace tak, aby byla zachována věrnost tvarů - neřešte tedy antialiasing. Inspiraci pro rasterizaci jednotlivých primitiv můžete naleznout například zde: http://members.chello.at/~easyfilter/bresenham.html
+Příklad
+
+Mějme vstupní soubor vstup.txt s následující posloupností příkazů:
+circle 50 50 10
+line 50 50 100 50
+circle 100 50 15
+rotate 75 50 45
+translate 20 20
+rect 10 10 40 30
+scale 0 0 2
+line 20 20 100 80
+scale 0 0 0.25
+line 5 20 25 5
+rotate 80 80 180
+circle 40 40 30
+rotate 80 80 90
+circle 40 40 30
+rotate 80 80 -180
+rect 10 10 60 60
+
+Spustíme program s následující příkazovou řádkou:
+./drawing.exe vstup.txt obrazek.svg 160x160
+
+Výstupem programu je následující výpis na konzoli:
+OK
+16
+
+A soubor obrazek.svg (cestu jsme zadali relativně a proto se vytvoří v aktuálním pracovním adresáři), jehož obsahem je následující kresba ve formátu SVG:
+
+Poznámky
+
+Není nutné dodržet na 100 % přesnost výstupu - hodnotit budu hlavně použití jazyka C++ a splnění kritérií. To, zda čáru vykreslujete tak či onak je mi v zásadě jedno, pokud vidím, že se za tím skrývá silný základ na úrovni implementace (správné použití jazyka, správná dekompozice problému, ...).
+Dodatečné požadavky
+
+K výše uvedeným požadavkům musí navíc program splnit následující kritéria:
+
+    musí být přeložitelný
+        na Windows (MSVS2022) i Linuxu (gcc/clang)
+        k semestrální práci dodáte CMakeLists.txt soubor pro přeložení pomocí nástroje CMake
+    nesmí padat (segfault, abort, ...)
+    nesmí vykazovat úniky paměti (bude ověřeno nástroji valgrind a CrtDebug)
+    musí projít statickou analýzou MSVS2019
+
+Dále se v implementaci musí objevit:
+
+    rozumný objektový návrh - členění do tříd, dědičnost, správná viditelnost atributů, dodržování zvyklostí a coding standardů
+    abstraktní třída, virtuální metody, jejich přepisování (použití klíč. slova override)
+    použití RAII (např. ve formě "chytrých" ukazatelů)
+    použití proudů (pro výstup na konzoli a do souboru)
+    správné použití klíčových slov const a constexpr pro dekorování konstant, parametrů a metod
+    přetěžování operátorů (nabízí se pro vektor rychlosti a pozici)
+    lambda funkce
