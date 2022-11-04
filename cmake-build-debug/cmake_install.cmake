@@ -64,6 +64,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("S:/Git/UWB/KIV-CPP/cmake-build-debug/sp1/cmake_install.cmake")
 endif()
 

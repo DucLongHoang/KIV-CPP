@@ -3,11 +3,14 @@
 #include <string_view>
 #include "DataLoader.h"
 
+DataLoader::DataLoader() : mCommandCounter{0}, mCanvas{std::make_unique<Canvas>()} {}
+
 bool DataLoader::load_from_file(const std::string &file) {
     std::ifstream inputFile(file);
     std::string fileLine;
 
     while (std::getline(inputFile, fileLine)) {
+//        std::cout << "i am inside" << std::endl;
         handle_line(fileLine);
     }
     return true;
@@ -15,15 +18,17 @@ bool DataLoader::load_from_file(const std::string &file) {
 
 void DataLoader::handle_line(const std::string &fileLine) {
     std::vector<std::string> data;
+    std::stringstream lineStream;
+
+    // removing comments
+    size_t commentIndex = fileLine.find('#');
+    if (commentIndex == std::string::npos)
+        lineStream = std::stringstream(fileLine);
+    else
+        lineStream = std::stringstream(fileLine.substr(0, commentIndex));
 
     std::string token;
-    std::stringstream lineStream(fileLine);
-    while (std::getline(lineStream, token)) {
-        if (token == "#") {
-            process_input(data);
-            return;
-        }
-
+    while (std::getline(lineStream, token, ' ')) {
         data.push_back(token);
     }
     process_input(data);
@@ -49,24 +54,33 @@ void DataLoader::process_input(const std::vector<std::string>& data) {
             });
 
     switch (mapInput(data[0])) {
-        case Input::Line:
-            mCanvas->draw(std::make_unique<Line>(4,5,4,5));
+        case Input::Line: {
+            mCanvas->draw(std::make_unique<Line>(doubleValues[0], doubleValues[1], doubleValues[2], doubleValues[3]));
             break;
-        case Input::Circle:
-            mCanvas->draw(std::make_unique<Line>(4,5,4,5));
+        }
+        case Input::Circle: {
+            mCanvas->draw(std::make_unique<Circle>(doubleValues[0], doubleValues[1], doubleValues[2]));
             break;
-        case Input::Rectangle:
-            mCanvas->draw(std::make_unique<Line>(4,5,4,5));
+        }
+        case Input::Rectangle: {
+            mCanvas->draw(std::make_unique<Rectangle>(doubleValues[0], doubleValues[1], doubleValues[2], doubleValues[3]));
             break;
-        case Input::Translate:
+        }
+        case Input::Translate: {
             mCanvas->translate(doubleValues[0], doubleValues[1]);
             break;
-        case Input::Rotate:
+        }
+        case Input::Rotate: {
+            mCanvas->rotate(doubleValues[0], doubleValues[1], doubleValues[2]);
             break;
-        case Input::Scale:
+        }
+        case Input::Scale: {
+            mCanvas->scale(doubleValues[0], doubleValues[1], doubleValues[2]);
             break;
-        case Input::Error:
+        }
+        case Input::Error: {
             break;
+        }
     }
     
     mCommandCounter++;

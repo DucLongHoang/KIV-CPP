@@ -74,8 +74,8 @@ int main() {
 
     int d = a + b;
 
-    vypis_cislo(a);
-    vypis_cislo(b);
+    //vypis_cislo(a);
+    //vypis_cislo(b);
     vypis_cislo(Cislo{01});
     vypis_cislo(secti_cisla(a, b));
 

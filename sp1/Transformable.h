@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include <memory>
 
 class ITransformable {
@@ -12,7 +13,7 @@ class ITransformable {
 
 class Canvas : public ITransformable {
     public:
-        Canvas(size_t w, size_t h);
+        Canvas() = default;
 
         virtual void translate(double x, double y) override;
         virtual void rotate(double x, double y, double angle) override;
@@ -24,7 +25,6 @@ class Canvas : public ITransformable {
         ~Canvas() = default;
 
     private:
-        size_t mW, mH;
         std::vector<std::unique_ptr<ITransformable>> mShapes;
 };
 
@@ -61,5 +61,5 @@ class Rectangle : public ITransformable {
         virtual void scale(double x, double y, double factor) override;
 
     private:
-        double mX, mY, mW, mH;
+        std::array<std::unique_ptr<Line>, 4> sides;
 };

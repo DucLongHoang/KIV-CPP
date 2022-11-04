@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-//#include <format>
+#include <format>
 
 //class ISerializable {
 //    public:
@@ -94,8 +94,6 @@ class LoginPacket : BasePacket {
 };
 
 int main(int argc, char** argv) {
-
-    auto
 
 
 

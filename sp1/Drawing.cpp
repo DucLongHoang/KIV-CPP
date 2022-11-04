@@ -3,7 +3,7 @@
 
 void SVGDrawing::init(int width, int height) {
     mOutputStream = std::ostringstream("<svg viewBox=\"", std::ios::app);
-    mOutputStream << 0 << " " << 0 << " " << width << height << "\" ";
+    mOutputStream << 0 << " " << 0 << " " << width << " " << height << "\" ";
     mOutputStream << "xmlns=\"http://www.w3.org/2000/svg\">";
 }
 

@@ -1,6 +1,7 @@
 #include "Drawing.h"
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 /******************************************** SVG *************************************************/
 

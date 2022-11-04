@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <memory>
 
 class IDrawing {
     public:

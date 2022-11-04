@@ -21,6 +21,12 @@ S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv05/05/CMakeFiles/rebuild_cache.di
 S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv06/CMakeFiles/cv06.dir
 S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv06/CMakeFiles/edit_cache.dir
 S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv06/CMakeFiles/rebuild_cache.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/CMakeFiles/cv07.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/CMakeFiles/edit_cache.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/CMakeFiles/rebuild_cache.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/hw07/CMakeFiles/hw07.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/hw07/CMakeFiles/edit_cache.dir
+S:/Git/UWB/KIV-CPP/cmake-build-debug/cviceni/cv07/hw07/CMakeFiles/rebuild_cache.dir
 S:/Git/UWB/KIV-CPP/cmake-build-debug/sp1/CMakeFiles/sp1.dir
 S:/Git/UWB/KIV-CPP/cmake-build-debug/sp1/CMakeFiles/edit_cache.dir
 S:/Git/UWB/KIV-CPP/cmake-build-debug/sp1/CMakeFiles/rebuild_cache.dir

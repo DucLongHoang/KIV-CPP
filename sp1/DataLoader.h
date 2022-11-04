@@ -14,7 +14,7 @@ class DataLoader final {
         };
 
         // mapping strings to enums
-        const std::map<const std::string, Input> inputMap = {
+        const std::map<const std::string, const Input&> inputMap = {
                 { "line", Input::Line },
                 { "circle", Input::Circle },
                 { "rect", Input::Rectangle },
@@ -23,7 +23,7 @@ class DataLoader final {
                 { "scale", Input::Scale }
         };
 
-        DataLoader() = default;
+        DataLoader();
         bool load_from_file(const std::string& file);
         void handle_line(const std::string& fileLine);
         void process_input(const std::vector<std::string>& data);
