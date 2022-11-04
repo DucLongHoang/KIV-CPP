@@ -1,6 +1,0 @@
-<svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
-<line x1="0" y1="0" x2="100" y2="80" stroke="red" />
-<line x1="100" y1="0" x2="0" y2="80" stroke="red" />
-<line x1="33" y1="40" x2="66" y2="40" stroke="green" />
-<line x1="50" y1="26" x2="50" y2="52" stroke="blue" />
-</svg>
