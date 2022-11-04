@@ -10,7 +10,7 @@
 Priklad SVG:
  
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <line x1="0" y1="80" x2="100" y2="20" stroke="black" />
+    <line ax="0" ay="80" bx="100" by="20" stroke="black" />
 </svg>
 
 */
@@ -53,10 +53,10 @@ std::ostream& operator<<(std::ostream& os, IDrawing::Color& c) {
 void SVGDrawing::Draw_Line(int fromX, int fromY, int toX, int toY, Color clr)
 {
     std::ostringstream output("<line ", std::ios::app);
-    output << "x1=\"" << fromX << "\" " ;
-    output << "y1=\"" << fromY << "\" " ;
-    output << "x2=\"" << toX << "\" " ;
-    output << "y2=\"" << toY << "\" " ;
+    output << "ax=\"" << fromX << "\" " ;
+    output << "ay=\"" << fromY << "\" " ;
+    output << "bx=\"" << toX << "\" " ;
+    output << "by=\"" << toY << "\" " ;
     output << "stroke=\"" << clr << "\" />" ;
 
     mCommands.push_back(output.str());

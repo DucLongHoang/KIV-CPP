@@ -13,16 +13,6 @@ class DataLoader final {
             Line, Circle, Rectangle, Translate, Rotate, Scale, Error
         };
 
-        // mapping strings to enums
-        const std::map<const std::string, const Input&> inputMap = {
-                { "line", Input::Line },
-                { "circle", Input::Circle },
-                { "rect", Input::Rectangle },
-                { "translate", Input::Translate },
-                { "rotate", Input::Rotate },
-                { "scale", Input::Scale }
-        };
-
         DataLoader();
         bool load_from_file(const std::string& file);
         void handle_line(const std::string& fileLine);
@@ -30,8 +20,10 @@ class DataLoader final {
 
         std::vector<std::unique_ptr<ITransformable>>::const_iterator begin() const;
         std::vector<std::unique_ptr<ITransformable>>::const_iterator end() const;
+        size_t commandCount() const;
 
     private:
         size_t mCommandCounter;
         std::unique_ptr<Canvas> mCanvas;
+        std::map<const std::string, const Input> mInputMap;
 };

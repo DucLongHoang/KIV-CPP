@@ -5,13 +5,13 @@
 bool Data_Loader::Load(const std::string& file)
 {
 
-	// Hlavicka: x1,y1,x2,y2,color
+	// Hlavicka: ax,ay,bx,by,color
 	// cisla jsou integery, color je retezec (konkretne jeden z vyctu: black, blue, green, yellow, red)
     std::ifstream inputFile(file);
     std::string fileLine;
 
     std::getline(inputFile, fileLine);
-    if (fileLine != "x1,y1,x2,y2,color") return false;
+    if (fileLine != "ax,ay,bx,by,color") return false;
 
     while (std::getline(inputFile, fileLine)) {
     std::istringstream lineStreamed(fileLine);

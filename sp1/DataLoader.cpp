@@ -1,16 +1,30 @@
 #include <sstream>
 #include <ranges>
+#include <filesystem>
 #include <string_view>
 #include "DataLoader.h"
 
-DataLoader::DataLoader() : mCommandCounter{0}, mCanvas{std::make_unique<Canvas>()} {}
+DataLoader::DataLoader() : mCommandCounter{0}, mCanvas{std::make_unique<Canvas>()} {
+    mInputMap = std::map<const std::string, const Input> {
+        { "line", Input::Line },
+        { "circle", Input::Circle },
+        { "rect", Input::Rectangle },
+        { "translate", Input::Translate },
+        { "rotate", Input::Rotate },
+        { "scale", Input::Scale }
+    };
+}
 
 bool DataLoader::load_from_file(const std::string &file) {
+    if (!std::filesystem::exists(file)) {
+        std::cout << "File does not exist: " << file << std::endl;
+        return false;
+    }
+
     std::ifstream inputFile(file);
     std::string fileLine;
 
     while (std::getline(inputFile, fileLine)) {
-//        std::cout << "i am inside" << std::endl;
         handle_line(fileLine);
     }
     return true;
@@ -38,15 +52,14 @@ void DataLoader::process_input(const std::vector<std::string>& data) {
     if (data.empty()) return;
 
     // lambda for finding mapping of input
-    auto mapInput = [this](const std::string& str) -> DataLoader::Input {
-        auto itr = DataLoader::inputMap.find(str);
-        if (itr == DataLoader::inputMap.end())
-            return DataLoader::Input::Error;
+    auto mapInput = [this](const std::string& str) -> Input {
+        auto itr = mInputMap.find(str);
+        if (itr == mInputMap.end())
+            return Input::Error;
         return itr->second;
     };
 
-    auto inputType = mapInput(data[0]);
-
+    // view for getting parsed values
     auto doubleValues = data
             | std::views::drop(1)
             | std::views::transform([](const std::string& s) -> double {
@@ -79,6 +92,7 @@ void DataLoader::process_input(const std::vector<std::string>& data) {
             break;
         }
         case Input::Error: {
+            mCommandCounter--;
             break;
         }
     }
@@ -92,4 +106,8 @@ std::vector<std::unique_ptr<ITransformable>>::const_iterator DataLoader::begin()
 
 std::vector<std::unique_ptr<ITransformable>>::const_iterator DataLoader::end() const {
     return mCanvas->end();
+}
+
+size_t DataLoader::commandCount() const {
+    return mCommandCounter;
 }

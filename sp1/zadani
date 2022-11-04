@@ -40,7 +40,7 @@ Instrukce pro vytváření entit:
 
     line <x1> <y1> <x2> <y2> - nakreslí úsečku z bodu [x_1,y_1] do bodu [x_2,y_2]
         x1, y1, x2 a y2 jsou reálná čísla
-        platí, že krajní body nesmí splývat, a tedy x1 != x2 || y1 != y2
+        platí, že krajní body nesmí splývat, a tedy ax != bx || ay != by
         např. line 10 15 120 200 (úsečka z bodu [10,15] do bodu [120,200])
     circle <x> <y> <r> - nakreslí kružnici se středem v [x,y] a poloměrem $r$
         x a y jsou reálná čísla
