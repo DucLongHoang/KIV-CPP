@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <algorithm>
 
 // aliasujeme si typ handleru
 using THandler = std::function<bool(const std::string&)>;

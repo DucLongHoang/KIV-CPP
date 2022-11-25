@@ -6,6 +6,7 @@
 #include <numeric>
 #include <algorithm>
 #include <functional>
+#include <ranges>
 #include <cmath>
 
 CAnalyzer::CAnalyzer(std::vector<double>&& numbers)
