@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <vector>
+#include <compare>
 #include <iomanip>
 #include <sstream>
 #include <concepts>
@@ -73,10 +74,26 @@ class MPInt {
         }
 
         // return vector length to original
+        void remove_padding()  {
+            while (mNumber.size() > 1 && mNumber.back() == 0)
+                mNumber.pop_back();
+        }
+
+        // spaceship operator for all comparisons
         template<size_t U> requires AtLeast4Bytes<U>
-        static void remove_padding(MPInt& lhs, MPInt<U>& rhs)  {
-            while (lhs.mNumber.back() == 0) lhs.mNumber.pop_back();
-            while (rhs.mNumber.back() == 0) rhs.mNumber.pop_back();
+        auto operator <=>(const MPInt<U> other) const {
+            if (mNumber.size() < other.mNumber.size())
+                return std::strong_ordering::less;
+            else if (mNumber.size() > other.mNumber.size())
+                return std::strong_ordering::greater;
+            else {
+                for (int i = (mNumber.size() - 1); i >= 0; i-- ) {
+                    auto comp = (mNumber[i] <=> other.mNumber[i]);
+                    if (comp == std::strong_ordering::equal) continue;
+                    else return comp;
+                }
+                return std::strong_ordering::equal;
+            }
         }
 
 
@@ -84,50 +101,87 @@ class MPInt {
 
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator+(MPInt& lhs, MPInt<U>& rhs) {
+            // if only one operand is negative
+            if (lhs.mIsNegative != rhs.mIsNegative) {
+                return (lhs.mIsNegative) ? (!lhs - rhs) : (lhs - !rhs);
+            }
+
             // result to be returned
             MPInt<std::max(T, U)> result(0);
             result.mNumber.pop_back();  // empty out the result first
+            result.mIsNegative = lhs.mIsNegative;   // adding 2 neg. numbers
+
+            // start calculation
             add_padding(lhs, rhs);
-            // calculation
             unsigned char sum = 0;
             for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
                 sum += (lhs.mNumber[i] + rhs.mNumber[i]);
                 result.mNumber.push_back(sum % BASE);
                 sum /= BASE;   // = carry
             }
-            if (sum != 0) result.mNumber.push_back(sum);    // push last carry
-            remove_padding(lhs, rhs);
+            result.mNumber.push_back(sum);  // push last carry
+            // end calculation
+
+            lhs.remove_padding();
+            rhs.remove_padding();
+            result.remove_padding();        //  last carry could be 0
             return result;
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
-        friend MPInt operator-(MPInt& lhs, MPInt<U>& rhs) {
+        friend MPInt<std::max(T, U)> operator-(MPInt& lhs, MPInt<U>& rhs) {
+            // if only one operand is negative
+            if (lhs.mIsNegative != rhs.mIsNegative) {
+                return (lhs.mIsNegative) ? (!(lhs + rhs)) : (lhs + rhs);
+            }
             // result to be returned
             MPInt<std::max(T, U)> result(0);
             result.mNumber.pop_back();  // empty out the result first
 
-            // make vectors same length
-            while (lhs.mNumber.size() < rhs.mNumber.size()) lhs.mNumber.push_back(0);
-            while (lhs.mNumber.size() > rhs.mNumber.size()) rhs.mNumber.push_back(0);
-
-            // calculation
-            short diff = 0;
-            for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
-                diff += (lhs.mNumber[i] - rhs.mNumber[i]);
-                result.mNumber.push_back(diff % BASE);
-                diff /= BASE;   // = carry
+            bool swap = false;
+            if (lhs.mIsNegative) {
+                if (lhs < rhs) {
+                    std::swap(lhs, rhs);
+                    swap = true;
+                }
+                else result.mIsNegative = true;
             }
-            if (diff != 0) result.mNumber.push_back(diff);    // push last carry
+            else {
+                if (lhs < rhs) {
+                    result.mIsNegative = true;
+                    std::swap(lhs, rhs);
+                    swap = true;
+                }
+            }
+
+            // start calculation
+            add_padding(lhs, rhs);
+            short carry = 0;
+            for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
+                int sub = (lhs.mNumber[i] - rhs.mNumber[i]  - carry);
+                if (sub < 0) {
+                    sub = sub + BASE;
+                    carry = 1;
+                }
+                else carry = 0;
+                result.mNumber.push_back(sub);
+            }
+            // end calculation
+            if (swap) std::swap(lhs, rhs);
+
+            lhs.remove_padding();
+            rhs.remove_padding();
+            result.remove_padding();
             return result;
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
-        friend MPInt operator*(MPInt& lhs, MPInt<U>& rhs) {
+        friend MPInt<std::max(T, U)> operator*(MPInt& lhs, MPInt<U>& rhs) {
 
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
-        friend MPInt operator/(MPInt& lhs, MPInt<U>& rhs) {
+        friend MPInt<std::max(T, U)> operator/(MPInt& lhs, MPInt<U>& rhs) {
 
         }
 
@@ -152,16 +206,25 @@ class MPInt {
         }
 
         MPInt& operator!() {
+            mIsNegative = !mIsNegative;
+            return *this;
+        }
+
+        MPInt& fact() {
 
         }
 
         friend std::ostream& operator<< (std::ostream& os, const MPInt& num) {
             std::stringstream ss;
 
+            if (num.mIsNegative) ss << '-';     // negative number
             ss << static_cast<unsigned int>(num.mNumber.back());    // first number is not padded
-            std::for_each(num.mNumber.rbegin() + 1, num.mNumber.rend(), [&ss](unsigned char i) {
-                ss << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(i);
-            });
+
+            if (num.mNumber.size() > 1) {
+                std::for_each(num.mNumber.rbegin() + 1, num.mNumber.rend(), [&ss](unsigned char i) {
+                    ss << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(i);
+                });
+            }
             std::reverse(ss.str().begin(), ss.str().end());
             return os << ss.str();
         }
