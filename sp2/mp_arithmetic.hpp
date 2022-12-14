@@ -30,7 +30,6 @@ class MPInt {
         bool mIsNegative;
 
     public:
-
         // constructor
         explicit MPInt(long long init) {
             mIsNegative = init < 0;
@@ -88,9 +87,7 @@ class MPInt {
             // result to be returned
             MPInt<std::max(T, U)> result(0);
             result.mNumber.pop_back();  // empty out the result first
-
             add_padding(lhs, rhs);
-
             // calculation
             unsigned char sum = 0;
             for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
@@ -99,9 +96,7 @@ class MPInt {
                 sum /= BASE;   // = carry
             }
             if (sum != 0) result.mNumber.push_back(sum);    // push last carry
-
             remove_padding(lhs, rhs);
-
             return result;
         }
 

@@ -10,13 +10,15 @@
 #include <functional>
 #include "mp_arithmetic.hpp"
 
+using namespace std::string_literals;
+
 // type aliases
 using Operands = std::pair<std::string, std::string>;
 using Handler = std::function<bool (const Operands&)>;
 
 // recognized math operations
-static std::regex MATH_OPS("[+-*/!]");
-static constexpr std::array<char, 5> MATH_OP {'+', '-', '*', '/', '!'};
+static constexpr std::array<char, 5> MATH_OPS{'+', '-', '*', '/', '!'};
+static const std::regex REGEX_MATH_OPS(R"([\+\-\*\/\!])");
 
 /**
  *
@@ -120,24 +122,23 @@ void MPTerm<T>::run() {
         std::getline(std::cin, command);
         operation = command;    // set default
 
-        // too lazy to implement shunting yard algorithm
-        for (const auto& op : MATH_OP) {
-            // finding math operator
-            size_t pos = command.find_first_of(op);
-            if (pos != std::string::npos) {
+        size_t operatorCount = 0;
+        for (const auto c : command) {
+            if (std::regex_match(std::string{c} , REGEX_MATH_OPS)) operatorCount++;
+        }
 
-                // check for other operators in rest of command
-                operands.second = command.substr(pos + 1);
-                auto secondOp = std::ref(operands.second);  // necessary cast to pass to lambda
-                bool moreOps = std::any_of(MATH_OP.begin(), MATH_OP.end(), [secondOp](const char& op) {
-                    return secondOp.get().find(op) != std::string::npos;
-                });
-                if (moreOps) break;
-
-                // expression 100+$2 is converted to -> operation = "+" and operands = "100,$2"
-                operation = op;
-                operands.first = command.substr(0, pos);
-                break;
+        if (operatorCount == 1) {
+            // too lazy to implement shunting yard algorithm
+            for (const auto op : MATH_OPS) {
+                // finding math operator
+                size_t pos = command.find_first_of(op);
+                if (pos != std::string::npos && pos != 0) {
+                    // expression 100+$2 is converted to -> operation = "+" and operands = "100,$2"
+                    operation = op;
+                    operands.first = command.substr(0, pos);
+                    operands.second = command.substr(pos + 1);
+                    break;
+                }
             }
         }
         // check if command exists
