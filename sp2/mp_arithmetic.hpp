@@ -102,9 +102,8 @@ class MPInt {
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator+(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
-            if (lhs.mIsNegative != rhs.mIsNegative) {
+            if (lhs.mIsNegative != rhs.mIsNegative)
                 return (lhs.mIsNegative) ? (!lhs - rhs) : (lhs - !rhs);
-            }
 
             // result to be returned
             MPInt<std::max(T, U)> result(0);
@@ -113,7 +112,7 @@ class MPInt {
 
             // start calculation
             add_padding(lhs, rhs);
-            unsigned char sum = 0;
+            unsigned char sum = 0;      // max is 1 + 99 + 99 < unsigned char is 255
             for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
                 sum += (lhs.mNumber[i] + rhs.mNumber[i]);
                 result.mNumber.push_back(sum % BASE);
@@ -131,9 +130,9 @@ class MPInt {
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator-(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
-            if (lhs.mIsNegative != rhs.mIsNegative) {
+            if (lhs.mIsNegative != rhs.mIsNegative)
                 return (lhs.mIsNegative) ? (!(lhs + rhs)) : (lhs + rhs);
-            }
+
             // result to be returned
             MPInt<std::max(T, U)> result(0);
             result.mNumber.pop_back();  // empty out the result first
