@@ -46,42 +46,40 @@ class MPTerm {
             fill_handlers();
         }
         void run();
-
-    std::optional<std::pair<MPInt<T>, MPInt<T>>> get_operands(const Operands& ops);
+        std::optional<std::pair<MPInt<T>, MPInt<T>>> get_operands(const Operands& ops);
+        std::optional<MPInt<T>> get_operand(const std::string& str);
 };
 
-// the 'use everything from the 10th lecture' method
 template<size_t T> requires AtLeast4Bytes<T>
-std::optional<std::pair<MPInt<T>, MPInt<T>>> MPTerm<T>::get_operands(const Operands &ops) {
-    std::variant<long long int, MPInt<T>> var1;
-    std::variant<long long int, MPInt<T>> var2;
-    MPInt<T> op1(0);
-    MPInt<T> op2(0);
+std::optional<MPInt<T>> MPTerm<T>::get_operand(const std::string& str) {
+    std::variant<long long int, MPInt<T>> var;
+    MPInt<T> op(0);
 
-    int idx;
-    // get first operand from number or bank
-    if (std::regex_match(ops.first, REGEX_BANK)){
-        idx = std::stoi(ops.first.substr(1)) - 1;
-        var1 = mBank[idx];
+    // get operand from number or bank
+    if (std::regex_match(str, REGEX_BANK)){
+        size_t idx = std::stoi(str.substr(1)) - 1;  // $1 = mBank[0]
+        if (idx > (mBank.size() - 1)) {     // index not in bank yet
+            std::cout << "$" << str.substr(1) << " not in bank yet" << std::endl;
+            return std::nullopt;
+        }
+        else var = mBank[idx];
     }
-    else if (std::regex_match(ops.first, REGEX_NUMBER))
-        var1 = MPInt<T>(std::stoull(ops.first));
-    else return std::nullopt;
-
-    // get second operand from number or bank
-    if (std::regex_match(ops.second, REGEX_BANK)){
-        idx = std::stoi(ops.second.substr(1)) - 1;
-        var2 = mBank[idx];
-    }
-    else if (std::regex_match(ops.second, REGEX_NUMBER))
-        var2 = MPInt<T>(std::stoull(ops.second));
+    else if (std::regex_match(str, REGEX_NUMBER))
+        var = MPInt<T>(std::stoull(str));
     else return std::nullopt;
 
     // use correct operand from variant
-    std::visit([&op1](auto&& val) { op1 = MPInt<T>(val); }, var1);
-    std::visit([&op2](auto&& val) { op2 = MPInt<T>(val); }, var2);
+    std::visit([&op](auto&& val) { op = MPInt<T>(val); }, var);
+    return op;
+}
 
-    return std::make_pair(op1, op2);
+template<size_t T> requires AtLeast4Bytes<T>
+std::optional<std::pair<MPInt<T>, MPInt<T>>> MPTerm<T>::get_operands(const Operands &ops) {
+    auto opt1 = get_operand(ops.first);
+    auto opt2 = get_operand(ops.second);
+    if (!opt1 || !opt2) return std::nullopt;
+
+    return std::make_pair(opt1.value(), opt2.value());
 }
 
 template<size_t T> requires AtLeast4Bytes<T>
@@ -97,7 +95,7 @@ void MPTerm<T>::fill_handlers() {
         auto opt = get_operands(op);
         if (!opt) return true;
 
-        auto [lhs, rhs] = get_operands(op).value();
+        auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs + rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -108,7 +106,7 @@ void MPTerm<T>::fill_handlers() {
         auto opt = get_operands(op);
         if (!opt) return true;
 
-        auto [lhs, rhs] = get_operands(op).value();
+        auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs - rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -119,7 +117,7 @@ void MPTerm<T>::fill_handlers() {
         auto opt = get_operands(op);
         if (!opt) return true;
 
-        auto [lhs, rhs] = get_operands(op).value();
+        auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs * rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -130,7 +128,7 @@ void MPTerm<T>::fill_handlers() {
         auto opt = get_operands(op);
         if (!opt) return true;
 
-        auto [lhs, rhs] = get_operands(op).value();
+        auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs / rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -138,8 +136,11 @@ void MPTerm<T>::fill_handlers() {
     };
 
     mHandlerMap["!"] = [this](const Operands &op) -> bool {
-        MPInt<T> operand(std::stoull(op.first));
-        MPInt<T> result = !operand;
+        auto opt = get_operand(op.first);
+        if (!opt) return true;
+
+        MPInt<T> operand = opt.value();
+        MPInt<T> result = operand.fact();
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
@@ -170,7 +171,7 @@ void MPTerm<T>::run() {
         operation = command;    // set default
 
         size_t operatorCount = 0;
-        for (const auto c : command) {
+        for (auto c : command) {
             if (std::regex_match(std::string{c} , REGEX_MATH_OPS)) operatorCount++;
         }
 
