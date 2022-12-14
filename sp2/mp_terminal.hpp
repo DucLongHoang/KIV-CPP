@@ -6,6 +6,8 @@
 #include <regex>
 #include <string>
 #include <memory>
+#include <variant>
+#include <optional>
 #include <algorithm>
 #include <functional>
 #include "mp_arithmetic.hpp"
@@ -19,6 +21,8 @@ using Handler = std::function<bool (const Operands&)>;
 // recognized math operations
 static constexpr std::array<char, 5> MATH_OPS{'+', '-', '*', '/', '!'};
 static const std::regex REGEX_MATH_OPS(R"([\+\-\*\/\!])");
+static const std::regex REGEX_NUMBER("[0-9]+");
+static const std::regex REGEX_BANK("^\\$[1-5]{1}");
 
 /**
  *
@@ -35,7 +39,6 @@ class MPTerm {
         void bank_number(MPInt<T> num);
         void fill_handlers();
 
-
     public:
         // constructor
         explicit MPTerm() {
@@ -43,7 +46,43 @@ class MPTerm {
             fill_handlers();
         }
         void run();
+
+    std::optional<std::pair<MPInt<T>, MPInt<T>>> get_operands(const Operands& ops);
 };
+
+// the 'use everything from the 10th lecture' method
+template<size_t T> requires AtLeast4Bytes<T>
+std::optional<std::pair<MPInt<T>, MPInt<T>>> MPTerm<T>::get_operands(const Operands &ops) {
+    std::variant<long long int, MPInt<T>> var1;
+    std::variant<long long int, MPInt<T>> var2;
+    MPInt<T> op1(0);
+    MPInt<T> op2(0);
+
+    int idx;
+    // get first operand from number or bank
+    if (std::regex_match(ops.first, REGEX_BANK)){
+        idx = std::stoi(ops.first.substr(1)) - 1;
+        var1 = mBank[idx];
+    }
+    else if (std::regex_match(ops.first, REGEX_NUMBER))
+        var1 = MPInt<T>(std::stoull(ops.first));
+    else return std::nullopt;
+
+    // get second operand from number or bank
+    if (std::regex_match(ops.second, REGEX_BANK)){
+        idx = std::stoi(ops.second.substr(1)) - 1;
+        var2 = mBank[idx];
+    }
+    else if (std::regex_match(ops.second, REGEX_NUMBER))
+        var2 = MPInt<T>(std::stoull(ops.second));
+    else return std::nullopt;
+
+    // use correct operand from variant
+    std::visit([&op1](auto&& val) { op1 = MPInt<T>(val); }, var1);
+    std::visit([&op2](auto&& val) { op2 = MPInt<T>(val); }, var2);
+
+    return std::make_pair(op1, op2);
+}
 
 template<size_t T> requires AtLeast4Bytes<T>
 void MPTerm<T>::bank_number(MPInt<T> num) {
@@ -55,8 +94,10 @@ void MPTerm<T>::bank_number(MPInt<T> num) {
 template<size_t T> requires AtLeast4Bytes<T>
 void MPTerm<T>::fill_handlers() {
     mHandlerMap["+"] = [this](const Operands &op) -> bool {
-        MPInt<T> lhs(std::stoull(op.first));
-        MPInt<T> rhs(std::stoull(op.second));
+        auto opt = get_operands(op);
+        if (!opt) return true;
+
+        auto [lhs, rhs] = get_operands(op).value();
         MPInt<T> result = lhs + rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -64,8 +105,10 @@ void MPTerm<T>::fill_handlers() {
     };
 
     mHandlerMap["-"] = [this](const Operands &op) -> bool {
-        MPInt<T> lhs(std::stoull(op.first));
-        MPInt<T> rhs(std::stoull(op.second));
+        auto opt = get_operands(op);
+        if (!opt) return true;
+
+        auto [lhs, rhs] = get_operands(op).value();
         MPInt<T> result = lhs - rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -73,8 +116,10 @@ void MPTerm<T>::fill_handlers() {
     };
 
     mHandlerMap["*"] = [this](const Operands &op) -> bool {
-        MPInt<T> lhs(std::stoull(op.first));
-        MPInt<T> rhs(std::stoull(op.second));
+        auto opt = get_operands(op);
+        if (!opt) return true;
+
+        auto [lhs, rhs] = get_operands(op).value();
         MPInt<T> result = lhs * rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -82,8 +127,10 @@ void MPTerm<T>::fill_handlers() {
     };
 
     mHandlerMap["/"] = [this](const Operands &op) -> bool {
-        MPInt<T> lhs(std::stoull(op.first));
-        MPInt<T> rhs(std::stoull(op.second));
+        auto opt = get_operands(op);
+        if (!opt) return true;
+
+        auto [lhs, rhs] = get_operands(op).value();
         MPInt<T> result = lhs / rhs;
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
