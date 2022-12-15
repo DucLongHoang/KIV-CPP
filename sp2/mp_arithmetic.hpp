@@ -267,16 +267,13 @@ class MPInt {
 
         friend std::ostream& operator<< (std::ostream& os, const MPInt& num) {
             std::stringstream ss;
+            ss << (num.mDigits.back());    // first number is not padded
 
-            if (num.mIsNegative) ss << '-';     // negative number
-            ss << static_cast<unsigned int>(num.mNumber.back());    // first number is not padded
-
-            if (num.mNumber.size() > 1) {
-                std::for_each(num.mNumber.rbegin() + 1, num.mNumber.rend(), [&ss](unsigned char i) {
-                    ss << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(i);
-                });
+            // pad numbers
+            for (long long int i = num.mDigits.size() - 2; i >= 0; --i) {
+                ss << std::setfill('0') << std::setw(4) << num.mDigits[i];
             }
-            std::reverse(ss.str().begin(), ss.str().end());
+            if (num.mIsNegative) os << "-";     // negative number
             return os << ss.str();
         }
 };
