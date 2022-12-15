@@ -125,7 +125,7 @@ class MPInt {
         friend MPInt<std::max(T, U)> operator+(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
             if (lhs.mIsNegative != rhs.mIsNegative)
-                return (lhs.mIsNegative) ? (!lhs - rhs) : (lhs - !rhs);
+                return (lhs.mIsNegative) ? (rhs - !lhs) : (lhs - !rhs);
 
             // result to be returned
             MPInt<std::max(T, U)> result(0);
@@ -153,7 +153,7 @@ class MPInt {
         friend MPInt<std::max(T, U)> operator-(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
             if (lhs.mIsNegative != rhs.mIsNegative)
-                return (lhs.mIsNegative) ? (!(lhs + rhs)) : (lhs + rhs);
+                return (lhs.mIsNegative) ? (!(!lhs + rhs)) : (lhs + !rhs);
 
             // result to be returned
             MPInt<std::max(T, U)> result(0);
@@ -207,8 +207,7 @@ class MPInt {
                 lhs.mIsNegative = true;
             // both operands are negative or positive
             else if (a.mIsNegative) {   // flip if negative
-                a = !a;
-                b = !b;
+                !a, !b;
             }
             while (a > zero) {
                 if (a.mNumber.front() % 2) {
