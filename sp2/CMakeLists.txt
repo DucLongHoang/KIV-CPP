@@ -6,5 +6,5 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(sp2
         mp_arithmetic.hpp
         mp_terminal.hpp
-        main.cpp
+        mp_calc.cpp
         )
