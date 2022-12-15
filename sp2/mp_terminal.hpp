@@ -1,18 +1,15 @@
 #pragma once
 
 #include <map>
-#include <deque>
 #include <array>
+#include <deque>
 #include <regex>
 #include <string>
-#include <memory>
 #include <variant>
 #include <optional>
 #include <algorithm>
 #include <functional>
 #include "mp_arithmetic.hpp"
-
-using namespace std::string_literals;
 
 // type aliases
 using Operands = std::pair<std::string, std::string>;
@@ -97,6 +94,8 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs + rhs;
+        if (result.overflowed()) return true;
+
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
@@ -108,6 +107,8 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs - rhs;
+        if (result.overflowed()) return true;
+
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
@@ -119,6 +120,8 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs * rhs;
+        if (result.overflowed()) return true;
+
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
@@ -130,6 +133,8 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs / rhs;
+        if (result.overflowed()) return true;
+
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
@@ -141,16 +146,18 @@ void MPTerm<T>::fill_handlers() {
 
         MPInt<T> operand = opt.value();
         MPInt<T> result = operand.fact();
+        if (result.overflowed()) return true;
+
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
         return true;
     };
 
     mHandlerMap["bank"] = [this](const Operands &op) -> bool {
-        int i = 1;
-        std::for_each(mBank.begin(), mBank.end(), [&i](const MPInt<T>& num) {
+        size_t i = 1;
+        for (const auto& num : mBank) {
             std::cout << "$" << i++ << " = " << num << std::endl;
-        });
+        }
         return true;
     };
 

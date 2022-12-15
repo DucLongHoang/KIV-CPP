@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <limits>
 #include <ranges>
 #include <vector>
@@ -7,10 +8,12 @@
 #include <iomanip>
 #include <sstream>
 #include <concepts>
+#include <stdexcept>
 #include <type_traits>
 
 // base
 static constexpr unsigned short BASE = 10000;
+static constexpr size_t MPI_UNLIMITED = std::numeric_limits<size_t>::max();
 
 /**
  * Concept AtLeast4Bytes - self-explanatory
@@ -31,6 +34,7 @@ class MPInt {
         // the least significant digit at [0]
         std::vector<unsigned short> mDigits;
         bool mIsNegative;
+
 
     public:
         // constructor
@@ -63,6 +67,22 @@ class MPInt {
         }
         // destructor
         ~MPInt() = default;
+
+        // exception class
+        class MPIntException : public std::exception {
+            private:
+                std::string mStr;
+                MPInt mNum;
+
+            public:
+                explicit MPIntException(const MPInt& num) : mNum(num), mStr("Overflown number: ") {}
+                const char* what() noexcept {
+                    std::stringstream ss;
+                    ss << mNum;
+                    mStr.append(ss.str());
+                    return mStr.c_str();
+                }
+        };
 
         // make vectors same length
         template<size_t U> requires AtLeast4Bytes<U>
@@ -221,6 +241,7 @@ class MPInt {
 
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator/(MPInt& lhs, MPInt<U>& rhs) {
+
             MPInt<std::max(T, U)> res(0);
             while (lhs > MPInt(0)) {
                 lhs = lhs - rhs;
@@ -253,6 +274,21 @@ class MPInt {
         MPInt& operator!() {
             mIsNegative = !mIsNegative;
             return *this;
+        }
+
+        bool overflowed() const {
+            if (T == MPI_UNLIMITED) return false;
+            long long int max = std::pow(2, (T * 8));
+            if (*this > MPInt(max)) {
+                try {
+                    throw MPIntException(*this);
+                }
+                catch (MPIntException& mpIntException) {
+                    std::cout << mpIntException.what() << std::endl;
+                    return true;
+                }
+            }
+            return false;
         }
 
         MPInt& fact() {
