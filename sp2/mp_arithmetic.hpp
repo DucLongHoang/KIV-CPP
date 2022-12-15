@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <ranges>
 #include <vector>
 #include <compare>
 #include <iomanip>
@@ -32,7 +33,7 @@ class MPInt {
 
     public:
         // constructor
-        explicit MPInt(long long init) {
+        explicit MPInt(long long int init) {
             mIsNegative = init < 0;
             if (init == 0) mNumber.push_back(0);
             else {
@@ -62,10 +63,6 @@ class MPInt {
         // destructor
         ~MPInt() = default;
 
-        // public iterators for range related stuffs
-        [[nodiscard]] std::vector<unsigned char>::const_iterator begin() const { return mNumber.begin(); }
-        [[nodiscard]] std::vector<unsigned char>::const_iterator end() const { return mNumber.end(); }
-
         // make vectors same length
         template<size_t U> requires AtLeast4Bytes<U>
         static void add_padding(MPInt& lhs, MPInt<U>& rhs)  {
@@ -74,9 +71,22 @@ class MPInt {
         }
 
         // return vector length to original
-        void remove_padding()  {
+        MPInt& remove_padding()  {
             while (mNumber.size() > 1 && mNumber.back() == 0)
                 mNumber.pop_back();
+            return *this;
+        }
+
+        MPInt& halve() {
+            size_t carry = 0;
+            for (auto i = mNumber.rbegin(); i != mNumber.rend(); ++i) {
+                carry *= BASE;
+                carry += *i;
+                *i = carry / 2;
+                carry = carry % 2;
+            }
+            this->remove_padding();
+            return *this;
         }
 
         // spaceship operator for all comparisons
@@ -94,6 +104,18 @@ class MPInt {
                 }
                 return std::strong_ordering::equal;
             }
+        }
+
+        // ok so spaceship operator was not enough
+        template<size_t U> requires AtLeast4Bytes<U>
+        bool operator==(const MPInt<U> other) const {
+            if (mNumber.size() != other.mNumber.size()) return false;
+
+            for (int i = (mNumber.size() - 1); i >= 0; i-- ) {
+                bool comp = (mNumber[i] == other.mNumber[i]);
+                if (!comp) return false;
+            }
+            return true;
         }
 
 
@@ -176,12 +198,37 @@ class MPInt {
 
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator*(MPInt& lhs, MPInt<U>& rhs) {
+            MPInt<std::max(T, U)> a(lhs), b(rhs);
+            MPInt zero(0);
+            lhs = MPInt(0);
 
+            // multiplying with 1 negative operand
+            if (a.mIsNegative != b.mIsNegative)
+                lhs.mIsNegative = true;
+            // both operands are negative or positive
+            else if (a.mIsNegative) {   // flip if negative
+                a = !a;
+                b = !b;
+            }
+            while (a > zero) {
+                if (a.mNumber.front() % 2) {
+                    lhs = lhs + b;
+                }
+                a.halve();
+                b = b + b;
+            }
+            return lhs;
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator/(MPInt& lhs, MPInt<U>& rhs) {
-
+            MPInt<std::max(T, U)> res(0);
+            while (lhs > MPInt(0)) {
+                lhs = lhs - rhs;
+                MPInt one(1);
+                res = res + one;
+            }
+            return res;
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
