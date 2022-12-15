@@ -36,28 +36,28 @@ class MPInt {
         // constructor
         explicit MPInt(long long int init) {
             mIsNegative = init < 0;
-            if (init == 0) mNumber.push_back(0);
+            if (init == 0) mDigits.push_back(0);
             else {
                 init = std::abs(init);
                 while (init) {
-                    mNumber.push_back(init % BASE);
+                    mDigits.push_back(init % BASE);
                     init /= BASE;  // carry
                 }
             }
         }
         // copy constructor
-        MPInt(const MPInt& o) : mNumber(o.mNumber), mIsNegative(o.mIsNegative) {}
+        MPInt(const MPInt& o) : mDigits(o.mDigits), mIsNegative(o.mIsNegative) {}
         // copy assignment
         MPInt& operator=(const MPInt& o){
-            mNumber = o.mNumber;
+            mDigits = o.mDigits;
             mIsNegative = o.mIsNegative;
             return *this;
         }
         // move constructor
-        MPInt(MPInt&& o) noexcept : mNumber(std::move(o.mNumber)), mIsNegative(std::move(o.mIsNegative)) {}
+        MPInt(MPInt&& o) noexcept : mDigits(std::move(o.mDigits)), mIsNegative(std::move(o.mIsNegative)) {}
         // move assignment
         MPInt& operator=(MPInt&& o) noexcept {
-            mNumber = std::move(o.mNumber);
+            mDigits = std::move(o.mDigits);
             mIsNegative = std::move(o.mIsNegative);
             return *this;
         }
@@ -67,39 +67,38 @@ class MPInt {
         // make vectors same length
         template<size_t U> requires AtLeast4Bytes<U>
         static void add_padding(MPInt& lhs, MPInt<U>& rhs)  {
-            while (lhs.mNumber.size() < rhs.mNumber.size()) lhs.mNumber.push_back(0);
-            while (lhs.mNumber.size() > rhs.mNumber.size()) rhs.mNumber.push_back(0);
+            while (lhs.mDigits.size() < rhs.mDigits.size()) lhs.mDigits.push_back(0);
+            while (lhs.mDigits.size() > rhs.mDigits.size()) rhs.mDigits.push_back(0);
         }
 
         // return vector length to original
         MPInt& remove_padding()  {
-            while (mNumber.size() > 1 && mNumber.back() == 0)
-                mNumber.pop_back();
+            while (mDigits.size() > 1 && mDigits.back() == 0)
+                mDigits.pop_back();
             return *this;
         }
 
         MPInt& halve() {
             size_t carry = 0;
-            for (auto i = mNumber.rbegin(); i != mNumber.rend(); ++i) {
+            for (auto& i : std::ranges::reverse_view(mDigits)) {
                 carry *= BASE;
-                carry += *i;
-                *i = carry / 2;
-                carry = carry % 2;
+                carry += i;
+                i = carry / 2;
+                carry %= 2;
             }
-            this->remove_padding();
-            return *this;
+            return this->remove_padding();
         }
 
         // spaceship operator for all comparisons
         template<size_t U> requires AtLeast4Bytes<U>
         auto operator <=>(const MPInt<U> other) const {
-            if (mNumber.size() < other.mNumber.size())
+            if (mDigits.size() < other.mDigits.size())
                 return std::strong_ordering::less;
-            else if (mNumber.size() > other.mNumber.size())
+            else if (mDigits.size() > other.mDigits.size())
                 return std::strong_ordering::greater;
             else {
-                for (int i = (mNumber.size() - 1); i >= 0; i-- ) {
-                    auto comp = (mNumber[i] <=> other.mNumber[i]);
+                for (int i = (mDigits.size() - 1); i >= 0; i-- ) {
+                    auto comp = (mDigits[i] <=> other.mDigits[i]);
                     if (comp == std::strong_ordering::equal) continue;
                     else return comp;
                 }
@@ -107,13 +106,13 @@ class MPInt {
             }
         }
 
-        // ok so spaceship operator was not enough
+        // ok, so spaceship operator was not enough
         template<size_t U> requires AtLeast4Bytes<U>
         bool operator==(const MPInt<U> other) const {
-            if (mNumber.size() != other.mNumber.size()) return false;
+            if (mDigits.size() != other.mDigits.size()) return false;
 
-            for (int i = (mNumber.size() - 1); i >= 0; i-- ) {
-                bool comp = (mNumber[i] == other.mNumber[i]);
+            for (int i = (mDigits.size() - 1); i >= 0; i-- ) {
+                bool comp = (mDigits[i] == other.mDigits[i]);
                 if (!comp) return false;
             }
             return true;
@@ -130,18 +129,18 @@ class MPInt {
 
             // result to be returned
             MPInt<std::max(T, U)> result(0);
-            result.mNumber.pop_back();  // empty out the result first
+            result.mDigits.pop_back();  // empty out the result first
             result.mIsNegative = lhs.mIsNegative;   // adding 2 neg. numbers
 
             // start calculation
             add_padding(lhs, rhs);
-            unsigned char sum = 0;      // max is 1 + 99 + 99 < unsigned char is 255
-            for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
-                sum += (lhs.mNumber[i] + rhs.mNumber[i]);
-                result.mNumber.push_back(sum % BASE);
+            size_t sum = 0;      // max is 1 + 99 + 99 < unsigned char is 255
+            for (size_t i = 0; i < rhs.mDigits.size(); ++i) {
+                sum += (lhs.mDigits[i] + rhs.mDigits[i]);
+                result.mDigits.push_back(sum % BASE);
                 sum /= BASE;   // = carry
             }
-            result.mNumber.push_back(sum);  // push last carry
+            result.mDigits.push_back(sum);  // push last carry
             // end calculation
 
             lhs.remove_padding();
@@ -158,7 +157,7 @@ class MPInt {
 
             // result to be returned
             MPInt<std::max(T, U)> result(0);
-            result.mNumber.pop_back();  // empty out the result first
+            result.mDigits.pop_back();  // empty out the result first
 
             bool swap = false;
             if (lhs.mIsNegative) {
@@ -178,15 +177,15 @@ class MPInt {
 
             // start calculation
             add_padding(lhs, rhs);
-            short carry = 0;
-            for (size_t i = 0; i < rhs.mNumber.size(); ++i) {
-                int sub = (lhs.mNumber[i] - rhs.mNumber[i]  - carry);
+            size_t carry = 0;
+            for (size_t i = 0; i < rhs.mDigits.size(); ++i) {
+                long long int sub = (lhs.mDigits[i] - rhs.mDigits[i] - carry);
                 if (sub < 0) {
                     sub = sub + BASE;
                     carry = 1;
                 }
                 else carry = 0;
-                result.mNumber.push_back(sub);
+                result.mDigits.push_back(sub);
             }
             // end calculation
             if (swap) std::swap(lhs, rhs);
@@ -211,7 +210,7 @@ class MPInt {
                 !a, !b;
             }
             while (a > zero) {
-                if (a.mNumber.front() % 2) {
+                if (a.mDigits.front() % 2) {
                     lhs = lhs + b;
                 }
                 a.halve();
