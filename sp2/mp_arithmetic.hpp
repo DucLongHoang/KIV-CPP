@@ -10,7 +10,7 @@
 #include <type_traits>
 
 // base
-static constexpr unsigned char BASE = 100;
+static constexpr unsigned short BASE = 10000;
 
 /**
  * Concept AtLeast4Bytes - self-explanatory
@@ -28,7 +28,8 @@ requires AtLeast4Bytes<T>
 class MPInt {
     private:
         // describes a number in base BASE, which is stored in reverse order
-        std::vector<unsigned char> mNumber;
+        // the least significant digit at [0]
+        std::vector<unsigned short> mDigits;
         bool mIsNegative;
 
     public:
