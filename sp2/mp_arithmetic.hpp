@@ -256,7 +256,13 @@ class MPInt {
         }
 
         MPInt& fact() {
-
+            MPInt it(*this);
+            MPInt one(1);
+            while (it > one) {
+                it = it - one;
+                *this = *this * it;
+            }
+            return *this;
         }
 
         friend std::ostream& operator<< (std::ostream& os, const MPInt& num) {
