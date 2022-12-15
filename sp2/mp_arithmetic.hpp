@@ -17,13 +17,13 @@ static constexpr size_t MPI_UNLIMITED = std::numeric_limits<size_t>::max();
 
 /**
  * Concept AtLeast4Bytes - self-explanatory
- * @tparam T
+ * @tparam T positive integer
  */
 template<size_t T>
 concept AtLeast4Bytes = T >= 4;
 
 /**
- * Template class MPInt
+ * Template class MPInt - multiple precision integer
  * @tparam T expects a number which describes the precision in bytes
  */
 template<size_t T>
@@ -34,7 +34,6 @@ class MPInt {
         // the least significant digit at [0]
         std::vector<unsigned short> mDigits;
         bool mIsNegative;
-
 
     public:
         // constructor
@@ -84,20 +83,32 @@ class MPInt {
                 }
         };
 
-        // make vectors same length
+        /**
+         * Makes vectors same length by padding the shorter one with zeroes.
+         * @tparam U template parameter
+         * @param lhs first number
+         * @param rhs second number
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         static void add_padding(MPInt& lhs, MPInt<U>& rhs)  {
             while (lhs.mDigits.size() < rhs.mDigits.size()) lhs.mDigits.push_back(0);
             while (lhs.mDigits.size() > rhs.mDigits.size()) rhs.mDigits.push_back(0);
         }
 
-        // return vector length to original
+        /**
+         * Removes zero padding added by the add_padding() method.
+         * @return class instance
+         */
         MPInt& remove_padding()  {
             while (mDigits.size() > 1 && mDigits.back() == 0)
                 mDigits.pop_back();
             return *this;
         }
 
+        /**
+         * Halves this number
+         * @return class instance
+         */
         MPInt& halve() {
             size_t carry = 0;
             for (auto& i : std::ranges::reverse_view(mDigits)) {
@@ -109,7 +120,12 @@ class MPInt {
             return this->remove_padding();
         }
 
-        // spaceship operator for all comparisons
+        /**
+         * Spaceship operator for all comparisons
+         * @tparam U template parameter
+         * @param other number to compare against
+         * @return some std::strong_ordering
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         auto operator <=>(const MPInt<U> other) const {
             if (mDigits.size() < other.mDigits.size())
@@ -126,7 +142,13 @@ class MPInt {
             }
         }
 
-        // ok, so spaceship operator was not enough
+        /**
+         * Ok, so spaceship operator was not enough...
+         * It would be enough if it was defaulted.
+         * @tparam U template parameter
+         * @param other number to compare against
+         * @return true if equal else false
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         bool operator==(const MPInt<U> other) const {
             if (mDigits.size() != other.mDigits.size()) return false;
@@ -139,8 +161,47 @@ class MPInt {
         }
 
 
-        // overloaded operators
+        /**
+         * Checks if number is overflowed. If yes throws an exception.
+         * @return true if overflown (+ throw exception) else false
+         */
+        [[nodiscard]] bool overflowed() const {
+            if (T == MPI_UNLIMITED) return false;
+            long long int max = std::pow(2, (T * 8));
+            if (*this > MPInt(max)) {
+                try {
+                    throw MPIntException(*this);
+                }
+                catch (MPIntException& mpIntException) {
+                    std::cout << mpIntException.what() << std::endl;
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        /**
+         * Calculates factorial
+         * @return factorial of this number
+         */
+        MPInt& fact() {
+            MPInt it(*this), one(1);
+            while (it > one) {
+                it = it - one;
+                *this = *this * it;
+            }
+            return *this;
+        }
+
+        // Overloaded operators
+
+        /**
+         * Returns sum of 2 numbers
+         * @tparam U template parameter
+         * @param lhs first operand
+         * @param rhs second operand
+         * @return sum of operands with the higher of the two precisions
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator+(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
@@ -169,6 +230,13 @@ class MPInt {
             return result;
         }
 
+        /**
+         * Returns subtraction result of 2 numbers
+         * @tparam U template parameter
+         * @param lhs first operand
+         * @param rhs second operand
+         * @return subtraction of operands with the higher of the two precisions
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator-(MPInt& lhs, MPInt<U>& rhs) {
             // if only one operand is negative
@@ -180,6 +248,7 @@ class MPInt {
             result.mDigits.pop_back();  // empty out the result first
 
             bool swap = false;
+            // some magic
             if (lhs.mIsNegative) {
                 if (lhs < rhs) {
                     std::swap(lhs, rhs);
@@ -216,6 +285,14 @@ class MPInt {
             return result;
         }
 
+
+        /**
+         * Returns multiplication result of 2 numbers
+         * @tparam U template parameter
+         * @param lhs first operand
+         * @param rhs second operand
+         * @return multiplication result of operands with the higher of the two precisions
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator*(MPInt& lhs, MPInt<U>& rhs) {
             MPInt<std::max(T, U)> a(lhs), b(rhs);
@@ -229,7 +306,7 @@ class MPInt {
             else if (a.mIsNegative) {   // flip if negative
                 !a, !b;
             }
-            while (a > zero) {
+            while (a > zero) {  // some magic
                 if (a.mDigits.front() % 2) {
                     lhs = lhs + b;
                 }
@@ -251,56 +328,65 @@ class MPInt {
             return res;
         }
 
+        /**
+         * Same as x + y
+         * @tparam U template parameter
+         * @param other number to sum with
+         * @return sum
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         MPInt<std::max(T, U)> operator+=(MPInt<U>& other) {
             return *this + other;
         }
 
+        /**
+         * Same as x - y
+         * @tparam U template parameter
+         * @param other number to subtract
+         * @return subtraction result
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         MPInt<std::max(T, U)> operator-=(const MPInt<U>& other) {
             return *this - other;
         }
 
+        /**
+         * Same as x * y
+         * @tparam U template parameter
+         * @param other number to multiply by
+         * @return multiplication result
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         MPInt<std::max(T, U)> operator*=(const MPInt<U>& other) {
             return *this * other;
         }
 
+        /**
+         * Same as x / y
+         * @tparam U template parameter
+         * @param other number to divide by
+         * @return division result
+         */
         template<size_t U> requires AtLeast4Bytes<U>
         MPInt<std::max(T, U)> operator/=(const MPInt<U>& other) {
             return *this / other;
         }
 
+        /**
+         * Flips the +/- sign of this number
+         * @return class instance
+         */
         MPInt& operator!() {
             mIsNegative = !mIsNegative;
             return *this;
         }
 
-        bool overflowed() const {
-            if (T == MPI_UNLIMITED) return false;
-            long long int max = std::pow(2, (T * 8));
-            if (*this > MPInt(max)) {
-                try {
-                    throw MPIntException(*this);
-                }
-                catch (MPIntException& mpIntException) {
-                    std::cout << mpIntException.what() << std::endl;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        MPInt& fact() {
-            MPInt it(*this);
-            MPInt one(1);
-            while (it > one) {
-                it = it - one;
-                *this = *this * it;
-            }
-            return *this;
-        }
-
+        /**
+         * Printing to ostream
+         * @param os stream to output to
+         * @param num to output
+         * @return stream so it can be chained
+         */
         friend std::ostream& operator<< (std::ostream& os, const MPInt& num) {
             std::stringstream ss;
             ss << (num.mDigits.back());    // first number is not padded

@@ -1,5 +1,5 @@
-#include <map>
 #include <iostream>
+#include <unordered_map>
 #include "mp_terminal.hpp"
 
 // accepted modes
@@ -17,7 +17,8 @@ enum class Mode {
     UNLIMITED, INTEGER, SHOWCASE
 };
 
-const std::map<const int, const Mode> modeMap = {
+// map of modes
+const std::unordered_map<int, Mode> modeMap = {
         {1, Mode::UNLIMITED},
         {2, Mode::INTEGER},
         {3, Mode::SHOWCASE},
@@ -51,6 +52,8 @@ class OptParser {
             return magic(std::stoi(str));
         }
 };
+Mode OptParser::MODE = Mode::UNLIMITED;
+
 
 int main(int argc, char** argv) {
     if (!OptParser::check_args(argc, argv)) {

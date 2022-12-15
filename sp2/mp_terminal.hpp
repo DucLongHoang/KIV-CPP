@@ -22,8 +22,8 @@ static const std::regex REGEX_NUMBER("[0-9]+");
 static const std::regex REGEX_BANK("^\\$[1-5]{1}");
 
 /**
- *
- * @tparam T
+ * Class MPTerm - a CLI for calculation
+ * @tparam T expects a number which describes the precision in bytes
  */
 template<size_t T> requires AtLeast4Bytes<T>
 class MPTerm {
@@ -47,6 +47,13 @@ class MPTerm {
         std::optional<MPInt<T>> get_operand(const std::string& str);
 };
 
+/**
+ * Returns the operand in MPInt format by creating it from the user input
+ * or taking it from the bank.
+ * @tparam T template parameter
+ * @param str the user input
+ * @return MPInt instance or std::nullopt
+ */
 template<size_t T> requires AtLeast4Bytes<T>
 std::optional<MPInt<T>> MPTerm<T>::get_operand(const std::string& str) {
     std::variant<long long int, MPInt<T>> var;
@@ -70,6 +77,12 @@ std::optional<MPInt<T>> MPTerm<T>::get_operand(const std::string& str) {
     return op;
 }
 
+/**
+ * Return both operands as a std::pair or nullopt
+ * @tparam T template parameter
+ * @param ops the user input
+ * @return pair of MPInts or std::nullopt
+ */
 template<size_t T> requires AtLeast4Bytes<T>
 std::optional<std::pair<MPInt<T>, MPInt<T>>> MPTerm<T>::get_operands(const Operands &ops) {
     auto opt1 = get_operand(ops.first);
@@ -79,6 +92,11 @@ std::optional<std::pair<MPInt<T>, MPInt<T>>> MPTerm<T>::get_operands(const Opera
     return std::make_pair(opt1.value(), opt2.value());
 }
 
+/**
+ * Puts the number in the bank
+ * @tparam T template parameter
+ * @param num number to be banked
+ */
 template<size_t T> requires AtLeast4Bytes<T>
 void MPTerm<T>::bank_number(MPInt<T> num) {
     mBank.push_front(num);
@@ -86,6 +104,10 @@ void MPTerm<T>::bank_number(MPInt<T> num) {
     if (mBank.size() > BANK_LIMIT) mBank.pop_back();
 }
 
+/**
+ * Fills out handles
+ * @tparam T template parameter
+ */
 template<size_t T> requires AtLeast4Bytes<T>
 void MPTerm<T>::fill_handlers() {
     mHandlerMap["+"] = [this](const Operands &op) -> bool {
@@ -166,6 +188,10 @@ void MPTerm<T>::fill_handlers() {
     };
 }
 
+/**
+ * Runs the terminal by parsing the user input.
+ * @tparam T template parameter
+ */
 template<size_t T> requires AtLeast4Bytes<T>
 void MPTerm<T>::run() {
     std::string command, operation;
