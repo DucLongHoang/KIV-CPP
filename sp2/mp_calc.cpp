@@ -62,17 +62,55 @@ int main(int argc, char** argv) {
     }
     switch (OptParser::MODE) {
         case Mode::UNLIMITED: {
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|                    MPCalc - unlimited mode                    |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|Input a simple arithmetic expression with at most one operation|" << std::endl;
+            std::cout << "|                 Binary operations: +, -, *, /                 |" << std::endl;
+            std::cout << "|                      Unary operations: !                      |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
+
             MPTerm<MPI_UNLIMITED> shell;
-            shell.run();
+            shell.run(std::cin);
             break;
         }
         case Mode::INTEGER: {
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|                 MPCalc - limited mode (32-bit)                |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|Input a simple arithmetic expression with at most one operation|" << std::endl;
+            std::cout << "|                 Binary operations: +, -, *, /                 |" << std::endl;
+            std::cout << "|                      Unary operations: !                      |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
+
             MPTerm<4> shell;
-            shell.run();
+            shell.run(std::cin);
             break;
         }
         case Mode::SHOWCASE: {
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|                    MPCalc - showcase mode                     |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
+            std::cout << "|                      Watch magic happen!                      |" << std::endl;
+            std::cout << "|***************************************************************|" << std::endl;
 
+            MPTerm<MPI_UNLIMITED> shell;
+            std::istringstream iss{
+                "99999999*9999999999 "
+                "1+$2 "
+                "bank "
+                "1-$1 "
+                "69696969-420420420 "
+                "$1*$2 "
+                "bank "
+                "100! "
+                "1-$1 "
+                "$1*$4 "
+                "15674893/36545 "
+                "$1/0 "
+                "exit"};
+
+            shell.run(iss);
             break;
         }
     }
