@@ -7,6 +7,7 @@
 #include <compare>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 #include <concepts>
 #include <stdexcept>
 #include <type_traits>
@@ -75,6 +76,7 @@ class MPInt {
 
             public:
                 explicit MPIntException(const MPInt& num) : mNum(num), mStr("Overflown number: ") {}
+                explicit MPIntException(std::string str) : mNum(MPInt(0)), mStr(std::move(str)) {}
                 const char* what() noexcept {
                     std::stringstream ss;
                     ss << mNum;
@@ -162,16 +164,24 @@ class MPInt {
 
 
         /**
-         * Checks if number is overflowed. If yes throws an exception.
+         * Checks if number is is_bad. If yes throws an exception.
          * @return true if overflown (+ throw exception) else false
          */
-        [[nodiscard]] bool overflowed() const {
+        [[nodiscard]] bool is_bad() const {
+            // zero division check
+            if (*this == MPInt(0) && mIsNegative) {
+                try { throw MPIntException("Division by: "); }
+                catch (MPIntException& mpIntException) {
+                    std::cout << mpIntException.what() << std::endl;
+                    return true;
+                }
+            }
+            // overflow check
             if (T == MPI_UNLIMITED) return false;
+
             long long int max = std::pow(2, (T * 8));
             if (*this > MPInt(max)) {
-                try {
-                    throw MPIntException(*this);
-                }
+                try { throw MPIntException(*this); }
                 catch (MPIntException& mpIntException) {
                     std::cout << mpIntException.what() << std::endl;
                     return true;
@@ -298,10 +308,12 @@ class MPInt {
             MPInt<std::max(T, U)> a(lhs), b(rhs);
             MPInt zero(0);
             lhs = MPInt(0);
+            bool flip = false;
 
             // multiplying with 1 negative operand
-            if (a.mIsNegative != b.mIsNegative)
-                lhs.mIsNegative = true;
+            if (a.mIsNegative != b.mIsNegative) {
+                flip = true;
+            }
             // both operands are negative or positive
             else if (a.mIsNegative) {   // flip if negative
                 !a, !b;
@@ -313,18 +325,41 @@ class MPInt {
                 a.halve();
                 b = b + b;
             }
+            if (flip) lhs.mIsNegative = true;
             return lhs;
         }
 
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator/(MPInt& lhs, MPInt<U>& rhs) {
+            MPInt zero(0), one(1);
+            bool neg = false;
+            // only one of operands is negative
+            if (lhs.mIsNegative != rhs.mIsNegative)
+                neg = true;
+            // both operands negative
+            else if (lhs.mIsNegative)
+                !lhs, !rhs;
 
-            MPInt<std::max(T, U)> res(0);
-            while (lhs > MPInt(0)) {
+            // magic
+            if (rhs == zero) return !zero;
+            if (lhs == zero) return zero;
+            if (rhs == one) {
+                lhs.mIsNegative = neg;
+                return lhs;
+            }
+            if (rhs == lhs) {
+                one.mIsNegative = neg;
+                return one;
+            }
+            if (rhs > lhs) return zero;
+
+            // calculation
+            MPInt<std::max(T, U)> res(-1);
+            while (!lhs.mIsNegative) {
                 lhs = lhs - rhs;
-                MPInt one(1);
                 res = res + one;
             }
+            res.mIsNegative = neg;
             return res;
         }
 
