@@ -194,8 +194,10 @@ class MPInt {
          * Calculates factorial
          * @return factorial of this number
          */
-        MPInt& fact() {
-            MPInt it(*this), one(1);
+        MPInt fact() {
+            MPInt it(*this), one(1), zero(0);
+            if (*this == zero) return one;
+
             while (it > one) {
                 it = it - one;
                 *this = *this * it;
@@ -219,7 +221,7 @@ class MPInt {
                 return (lhs.mIsNegative) ? (rhs - !lhs) : (lhs - !rhs);
 
             // result to be returned
-            MPInt<std::max(T, U)> result(0);
+            MPInt<std::max(T, U)> result(0), zero(0);
             result.mDigits.pop_back();  // empty out the result first
             result.mIsNegative = lhs.mIsNegative;   // adding 2 neg. numbers
 
@@ -237,6 +239,7 @@ class MPInt {
             lhs.remove_padding();
             rhs.remove_padding();
             result.remove_padding();        //  last carry could be 0
+            if (lhs == zero) lhs.mIsNegative = false;
             return result;
         }
 
@@ -254,7 +257,7 @@ class MPInt {
                 return (lhs.mIsNegative) ? (!(!lhs + rhs)) : (lhs + !rhs);
 
             // result to be returned
-            MPInt<std::max(T, U)> result(0);
+            MPInt<std::max(T, U)> result(0), zero(0);
             result.mDigits.pop_back();  // empty out the result first
 
             bool swap = false;
@@ -292,6 +295,7 @@ class MPInt {
             lhs.remove_padding();
             rhs.remove_padding();
             result.remove_padding();
+            if (lhs == zero) lhs.mIsNegative = false;
             return result;
         }
 
@@ -305,8 +309,7 @@ class MPInt {
          */
         template<size_t U> requires AtLeast4Bytes<U>
         friend MPInt<std::max(T, U)> operator*(MPInt& lhs, MPInt<U>& rhs) {
-            MPInt<std::max(T, U)> a(lhs), b(rhs);
-            MPInt zero(0);
+            MPInt<std::max(T, U)> a(lhs), b(rhs), zero(0);
             lhs = MPInt(0);
             bool flip = false;
 
@@ -353,14 +356,19 @@ class MPInt {
             }
             if (rhs > lhs) return zero;
 
-            // calculation
-            MPInt<std::max(T, U)> res(-1);
-            while (!lhs.mIsNegative) {
-                lhs = lhs - rhs;
-                res = res + one;
+            // very stupid calculation
+            MPInt<std::max(T, U)> quotient(0);
+            lhs.mIsNegative = false;
+            rhs.mIsNegative = false;
+
+            MPInt tmp = lhs - rhs;
+            while (tmp >= zero && !tmp.mIsNegative) {
+                quotient = quotient + one;
+                tmp = tmp - rhs;
             }
-            res.mIsNegative = neg;
-            return res;
+
+            quotient.mIsNegative = neg;
+            return quotient;
         }
 
         /**
@@ -414,6 +422,14 @@ class MPInt {
         MPInt& operator!() {
             mIsNegative = !mIsNegative;
             return *this;
+        }
+
+        /**
+         * "Getter" for mIsNegative
+         * @return mIsNegative
+         */
+        explicit operator bool() {
+            return mIsNegative;
         }
 
         /**
