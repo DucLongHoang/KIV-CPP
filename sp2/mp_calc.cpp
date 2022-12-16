@@ -108,7 +108,10 @@ int main(int argc, char** argv) {
                 "$1*$4 "
                 "15674893/36545 "
                 "$1/0 "
-                "exit"};
+                "94568/125 "
+                "$1*0 "
+                "$6-$7 "
+                "exit "};
 
             shell.run(iss);
             break;
