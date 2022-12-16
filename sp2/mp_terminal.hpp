@@ -42,7 +42,7 @@ class MPTerm {
             mBank = std::deque<MPInt<T>>{};
             fill_handlers();
         }
-        void run();
+        void run(std::istream& in);
         std::optional<std::pair<MPInt<T>, MPInt<T>>> get_operands(const Operands& ops);
         std::optional<MPInt<T>> get_operand(const std::string& str);
 };
@@ -116,7 +116,7 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs + rhs;
-        if (result.overflowed()) return true;
+        if (result.is_bad()) return true;
 
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -129,7 +129,7 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs - rhs;
-        if (result.overflowed()) return true;
+        if (result.is_bad()) return true;
 
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -142,7 +142,7 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs * rhs;
-        if (result.overflowed()) return true;
+        if (result.is_bad()) return true;
 
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -155,7 +155,7 @@ void MPTerm<T>::fill_handlers() {
 
         auto [lhs, rhs] = opt.value();
         MPInt<T> result = lhs / rhs;
-        if (result.overflowed()) return true;
+        if (result.is_bad()) return true;
 
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -168,7 +168,7 @@ void MPTerm<T>::fill_handlers() {
 
         MPInt<T> operand = opt.value();
         MPInt<T> result = operand.fact();
-        if (result.overflowed()) return true;
+        if (result.is_bad()) return true;
 
         std::cout << "$1 = " << result << std::endl;
         bank_number(result);
@@ -184,6 +184,7 @@ void MPTerm<T>::fill_handlers() {
     };
 
     mHandlerMap["exit"] = [](const Operands &op) -> bool {
+        std::cout << "Bye bye" << std::endl;
         return false;
     };
 }
@@ -193,15 +194,19 @@ void MPTerm<T>::fill_handlers() {
  * @tparam T template parameter
  */
 template<size_t T> requires AtLeast4Bytes<T>
-void MPTerm<T>::run() {
+void MPTerm<T>::run(std::istream& in) {
     std::string command, operation;
     Operands operands;
     bool ret = true;
 
     while(ret) {
         std::cout << ">";
-        std::getline(std::cin, command);
-        operation = command;    // set default
+        in >> command;
+        operation = command;    // set default operation
+
+        // very stupid code here
+        if (dynamic_cast<std::istringstream*>(&in) != nullptr)
+            std::cout << command << std:: endl;
 
         size_t operatorCount = 0;
         for (auto c : command) {
