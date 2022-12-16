@@ -167,6 +167,11 @@ void MPTerm<T>::fill_handlers() {
         if (!opt) return true;
 
         MPInt<T> operand = opt.value();
+        if (operand) {
+            std::cout << "Undefined negative factorial :(" << std::endl;
+            return true;
+        }
+
         MPInt<T> result = operand.fact();
         if (result.is_bad()) return true;
 
