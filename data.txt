@@ -1,0 +1,102 @@
+1
+Josef Slepicka
+24
+162.2
+115.8
+5.5:9.9
+2
+Richard Noska
+16
+180
+89.5
+0:0
+3
+Jana Stojkova
+24
+210.5
+95.1
+10:15
+4
+Miloslav Perník
+69
+185.2
+75
+12:45.4
+5
+Pavel Stary
+48
+168.9
+74.3
+85:45
+6
+Tomas Rohovy
+32
+178.124
+85.5
+95:98
+7
+Roman Krystal
+38
+220.99
+95.5
+33:34
+8
+Pavel Therein
+56
+192
+89.4
+35:78
+9
+Martin Pozbyl
+29
+159.9
+75.5
+99:10
+10
+Martin Zelenka
+23
+149.8
+70.2
+30:5
+11
+Ondrej Houska
+35
+180.2
+99.5
+12:24
+12
+Vaclav Vsudebyl
+99
+130.2
+55.5
+95:12
+13
+Martin Leto
+52
+202.2
+56.8
+12:44
+14
+Jiri Slezina
+70
+199.4
+77.5
+80:211
+15
+Ladislav Silnicka
+40
+165.2
+85.1
+98:42
+16
+Karel Fanfrnoch
+60
+160
+70
+11:22
+17
+Pavel Cisar
+48
+178.2
+95.8
+44:185
