@@ -7,25 +7,31 @@
 #include <utility>
 #include <fstream>
 
+template<double M1, double M2>
+concept Point = true;
+
 class Point2D {
-    double x, y;
+    double mX, mY;
 
-    // format in file as 'x:y'
-    friend std::istream& operator >> (std::istream& stream, Point2D& point) {
-        std::string line;
-        stream >> line;
-        auto pos = line.find_first_of(':');
-        point.x = std::stoi(line.substr(0, pos));
-        point.y = std::stoi(line.substr(pos + 1));
-        return stream;
-    }
+    public:
+        Point2D() = default;
+        Point2D(double x, double y) : mX(x), mY(y) {}
 
-    // print out as 'x:y'
-    friend std::ostream& operator << (std::ostream& stream, const Point2D& point) {
-        stream << point.x << ':' << point.y;
-        return stream;
-    }
+        // format in file as 'x:y'
+        friend std::istream& operator >> (std::istream& stream, Point2D& point) {
+            std::string line;
+            stream >> line;
+            auto pos = line.find_first_of(':');
+            point.mX = std::stoi(line.substr(0, pos));
+            point.mY = std::stoi(line.substr(pos + 1));
+            return stream;
+        }
 
+        // print out as 'mX:mY'
+        friend std::ostream& operator << (std::ostream& stream, const Point2D& point) {
+            stream << point.mX << ':' << point.mY;
+            return stream;
+        }
 };
 
 class FileReader {
@@ -44,12 +50,9 @@ class FileReader {
             return t;
         }
 
-        template<typename T1, typename ... T>
-        auto read(T ... args) {
-            T1 t1;
-            mIfStream >> t1;
-            read(t1);
-            return std::tuple{t1, read(args ...)};
+        template<typename ... Ts>
+        auto read_many() {
+            return std::make_tuple(read<Ts>() ...);
         }
 };
 
@@ -67,9 +70,8 @@ class FileWriter {
             mOfStream << t << std::endl;
         }
 
-        template<typename T1, typename ... T>
-        void write(T1 t1, T ... args) {
-            write(t1);
-            write(args...);
+        template<typename ... Ts>
+        void write(Ts ... ts) {
+            ( (mOfStream << ts << std::endl), ... );
         }
 };

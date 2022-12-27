@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     auto c = reader.read<std::string>();
     auto d = reader.read<Point2D>();
 
-//    auto [e, f ,g ,h] = reader.read<int, int, double, std::string>();
+    auto [e, f ,g ,h] = reader.read_many<int, double, std::string, Point2D>();
 
     FileWriter writer("out.txt");
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     writer.write<double>(999);
     writer.write<std::string>("hahaha");
 
-    writer.write<int, int, double, Point2D, std::string>(4,45, 5.0, Point2D(), "hello");
+    writer.write(4.7945, 5.0, Point2D(0, 0), "hello there", 555);
 
     std::vector<Human> humans;
 //    auto view = humans | std::views::filter [&humans](Human& h) {
